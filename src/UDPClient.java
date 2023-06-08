@@ -14,7 +14,7 @@ import java.util.Scanner;
  */
 public class UDPClient  {
   static String key, value, request;
-  static Scanner sc;
+  static Scanner scanner;
 
   /**
    * Driver function for the client
@@ -29,23 +29,23 @@ public class UDPClient  {
     }
     InetAddress serverIP = InetAddress.getByName(args[0]);
     int serverPort = Integer.parseInt(args[1]);
-    sc = new Scanner(System.in);
+    scanner = new Scanner(System.in);
 
-    try (DatagramSocket ds = new DatagramSocket()) {
+    try (DatagramSocket datagramSocket = new DatagramSocket()) {
       String start = getTimeStamp();
       System.out.println(start + " Client started");
 
-      byte[] reqBuffer;
-      byte[] resBuffer;
+      byte[] requestBuffer;
+      byte[] resultBuffer;
 
       // keep communication channel open user keyboard interruption
       while (true) {
         System.out.print("Operation List: \n1. Put\n2. Get\n3. Delete\nChoose operation: ");
-        String op = sc.nextLine().trim();
+        String op = scanner.nextLine().trim();
         if (Objects.equals(op, "1")) {
           getKey();
           getValue();
-          request = "PUT " + key + " | " + value;
+          request = "PUT " + key + " , " + value;
         } else if (Objects.equals(op, "2")) {
           getKey();
           request = "GET " + key;
@@ -59,15 +59,15 @@ public class UDPClient  {
 
         requestLog(request);
 
-        reqBuffer = request.getBytes();
-        DatagramPacket reqPacket = new DatagramPacket(reqBuffer, reqBuffer.length, serverIP, serverPort);
-        ds.send(reqPacket);
+        requestBuffer = request.getBytes();
+        DatagramPacket requestPacket = new DatagramPacket(requestBuffer, requestBuffer.length, serverIP, serverPort);
+        datagramSocket.send(requestPacket);
 
-        resBuffer = new byte[512];
-        DatagramPacket resPacket = new DatagramPacket(resBuffer, resBuffer.length);
-        ds.receive(resPacket);
-        String res = new String(resBuffer);
-        responseLog(res);
+        resultBuffer = new byte[512];
+        DatagramPacket resultPacket = new DatagramPacket(resultBuffer, resultBuffer.length);
+        datagramSocket.receive(resultPacket);
+        String result = new String(resultBuffer);
+        responseLog(result);
       }
     } catch (UnknownHostException | SocketException e) {
       System.out.println("Host/Port unknown, please provide valid hostname and port number.");
@@ -76,31 +76,31 @@ public class UDPClient  {
 
   private static void getKey() {
     System.out.print("Enter key: ");
-    key = sc.nextLine();
+    key = scanner.nextLine();
   }
   private static void getValue() {
     System.out.print("Enter Value: ");
-    value = sc.nextLine();
+    value = scanner.nextLine();
   }
 
   /**
    * helper method to print Request messages
    * @param s message string
    */
-  private static void requestLog(String s) { System.out.println(getTimeStamp() + " REQUEST => " + s);}
+  private static void requestLog(String s) { System.out.println(getTimeStamp() + " Request -> " + s);}
 
   /**
    * helper method to print Response messages
    * @param s message string
    */
-  private static void responseLog(String s) { System.out.println(getTimeStamp() + " RESPONSE => " + s + "\n");}
+  private static void responseLog(String s) { System.out.println(getTimeStamp() + " Response -> " + s + "\n");}
 
   /**
    * helper method to return current timestamp
    */
   private static String getTimeStamp() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-    return "[Time: " + sdf.format(new Date()) + "]";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
+    return "[Time: " + simpleDateFormat.format(new Date()) + "]";
   }
 
 }

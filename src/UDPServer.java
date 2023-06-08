@@ -11,14 +11,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Scanner;
 
 /**
  * Server Class for UDP communication
  */
 public class UDPServer {
-  static OutputStream writer;
-  static InputStream reader;
-  static Properties prop;
+  static OutputStream write;
+  static InputStream read;
+  static Properties properties;
 
   /**
    * Drive function for the server
@@ -26,49 +27,52 @@ public class UDPServer {
    * @throws SocketException exception
    */
   public static void main(String[] args) throws SocketException {
-    // accept server PORT from command line, else throw error
-    if(args.length != 1 || Integer.parseInt(args[0]) > 65535) {
-      throw new IllegalArgumentException("Invalid arguments. " +
-          "Please provide just the PORT number and start again");
-    }
-    int PORT = Integer.parseInt(args[0]);
 
-    try (DatagramSocket ds = new DatagramSocket(PORT)){
+    // accept server PORT from command line, else throw error
+    System.out.print("Enter a port Number: ");
+    Scanner port = new Scanner(System.in);
+    int PORT = port.nextInt();
+    if ( PORT > 65535) {
+      throw new IllegalArgumentException("Invalid input!"
+          + "Please provide a valid IP address and Port number and start again.");
+    }
+
+    try (DatagramSocket datagramSocket = new DatagramSocket(PORT)){
 
       String start = getTimeStamp();
       System.out.println(start + " Server started on port " + PORT);
       byte[] requestBuffer = new byte[512];
       byte[] responseBuffer;
 
-      reader = new FileInputStream("map.properties");
-      prop = new Properties();
-      prop.load(reader);
-      writer = new FileOutputStream("map.properties");
-      prop.store(writer, null);
+      read = new FileInputStream("map.properties");
+      properties = new Properties();
+      properties.load(read);
+      write = new FileOutputStream("map.properties");
+      properties.store(write, null);
 
       // keep communication channel open until user keyboard interruption
       while (true) {
         DatagramPacket receivePacket = new DatagramPacket(requestBuffer, requestBuffer.length);
-        ds.receive(receivePacket);
+        datagramSocket.receive(receivePacket);
         InetAddress client = receivePacket.getAddress();
         int clientPort = receivePacket.getPort();
-        String req = new String(receivePacket.getData());
-        requestLog(req, client.toString(), String.valueOf(clientPort));
+        String request = new String(receivePacket.getData());
+        requestLog(request, client.toString(), String.valueOf(clientPort));
 
         try {
-          String[] input = req.split(" ");
-          String res = performAction(input);
-          responseLog(res);
-          responseBuffer = res.getBytes();
+          String[] input = request.split(" ");
+          String result = performOperation(input);
+          responseLog(result);
+          responseBuffer = result.getBytes();
 
         } catch (IllegalArgumentException e) {
-          String errorMsg = e.getMessage();
-          errorLog(errorMsg);
-          responseBuffer = errorMsg.getBytes();
+          String errorMessage = e.getMessage();
+          errorLog(errorMessage);
+          responseBuffer = errorMessage.getBytes();
         }
 
-        DatagramPacket resPacket = new DatagramPacket(responseBuffer, responseBuffer.length, client, clientPort);
-        ds.send(resPacket);
+        DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client, clientPort);
+        datagramSocket.send(responsePacket);
         requestBuffer = new byte[512];
 
       }
@@ -82,27 +86,27 @@ public class UDPServer {
    * @param s message string
    */
   private static void requestLog(String s, String ip, String port) {
-    System.out.println(getTimeStamp() + " REQUEST from: " + ip + ":" + port  + " => "+ s);
+    System.out.println(getTimeStamp() + " Request from: " + ip + ":" + port  + " -> "+ s);
   }
 
   /**
    * helper method to print Response messages
    * @param s message string
    */
-  private static void responseLog(String s) { System.out.println(getTimeStamp() + " RESPONSE => " + s + "\n");}
+  private static void responseLog(String s) { System.out.println(getTimeStamp() + " Response -> " + s + "\n");}
 
   /**
    * helper method to print Error messages
    * @param err error message string
    */
-  private static void errorLog(String err) { System.out.println(getTimeStamp() + " ERROR => " + err);}
+  private static void errorLog(String err) { System.out.println(getTimeStamp() + " Error -> " + err);}
 
   /**
    * helper method to return current timestamp
    */
   private static String getTimeStamp() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-    return "[Time: " + sdf.format(new Date()) + "]";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
+    return "<Time: " + simpleDateFormat.format(new Date()) + ">";
   }
 
   /**
@@ -111,9 +115,9 @@ public class UDPServer {
    * @return result of PUT/GET/DELETE operation
    * @throws IllegalArgumentException in case of invalid input
    */
-  private static String performAction(String[] input) throws IllegalArgumentException {
+  private static String performOperation(String[] input) throws IllegalArgumentException {
     try {
-      String method = input[0].toUpperCase();
+      String operation = input[0].toUpperCase();
       String key = "";
       int j = 0;
       for(int i = 1; i < input.length; i++) {
@@ -125,7 +129,7 @@ public class UDPServer {
       }
       key = key.trim();
 
-      switch (method) {
+      switch (operation) {
         case "PUT": {
           String value = "";
           for(int i = j+1; i < input.length; i++) value = value + " " + input[i].trim();
@@ -147,30 +151,34 @@ public class UDPServer {
 
   }
 
-  private static String getFromMap(String key) throws IOException {
-    String value = prop.getProperty(key);
-    String res = value == null ?
-        "No value found for key \"" + key + "\"" : "Key: \"" + key + "\" ,Value: \"" + value + "\"";
-    return res;
+  static String addToMap(String key, String value) throws Exception {
+    properties.setProperty(key, value);
+    properties.store(write, null);
+    String result = "Inserted key \"" + key + "\" with value \"" + value + "\"";
+    return result;
   }
 
   private static String deleteFromMap(String key) throws IOException {
-    String res = "";
-    if(prop.containsKey(key)) {
-      prop.remove(key);
-      prop.store(writer, null);
-      res = "Deleted key \"" + key + "\"";
+    String result = "";
+    if(properties.containsKey(key)) {
+      properties.remove(key);
+      properties.store(write, null);
+      result = "Deleted key \"" + key + "\"" + " successfully!";
     }
     else {
-      res = "Key not found.";
+      result = "Key not found.";
     }
-    return res;
+    return result;
   }
 
-  static String addToMap(String key, String value) throws Exception {
-    prop.setProperty(key, value);
-    prop.store(writer, null);
-    String res = "Inserted key \"" + key + "\" with value \"" + value + "\"";
-    return res;
+  private static String getFromMap(String key) throws IOException {
+    String value = properties.getProperty(key);
+    String result = value == null ?
+        "No value found for key \"" + key + "\"" : "Key: \"" + key + "\" ,Value: \"" + value + "\"";
+    return result;
   }
+
+
+
+
 }

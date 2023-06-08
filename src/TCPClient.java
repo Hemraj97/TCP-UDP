@@ -5,11 +5,13 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * TCP Client Clas
+ * TCP Client Class
  */
 class TCPClient {
+
+//  private static final int TIMEOUT = 5000;
   static String key, value, request;
-  static BufferedReader br;
+  static BufferedReader bufferedReader;
 
   public static void main(String[] args) throws Exception {
 
@@ -23,20 +25,21 @@ class TCPClient {
     int serverPort = Integer.parseInt(args[1]);
 
     try (Socket s = new Socket(serverIP, serverPort)) {
-      DataInputStream din = new DataInputStream(s.getInputStream());
-      DataOutputStream dout = new DataOutputStream(s.getOutputStream());
-      br = new BufferedReader(new InputStreamReader(System.in));
+      DataInputStream dataInputStream = new DataInputStream(s.getInputStream());
+      DataOutputStream dataOutputStream = new DataOutputStream(s.getOutputStream());
+      bufferedReader = new BufferedReader(new InputStreamReader(System.in));
       String start = getTimeStamp();
       System.out.println(start + " Client started on port " + s.getPort());
 
       // keep communication channel open user keyboard interruption
       while (true) {
-        System.out.print("Operation List: \n1. Put\n2. Get\n3. Delete\nChoose operation: ");
-        String op = br.readLine().trim();
+        System.out.println("---------------------------------------");
+        System.out.print("Operations: \n1. PUT\n2. GET\n3. DELETE\nChoose operation number: ");
+        String op = bufferedReader.readLine().trim();
         if (Objects.equals(op, "1")) {
           getKey();
           getValue();
-          request = "PUT " + key + " | " + value;
+          request = "PUT " + key + " , " + value ;
         } else if (Objects.equals(op, "2")) {
           getKey();
           request = "GET " + key;
@@ -48,26 +51,34 @@ class TCPClient {
           continue;
         }
 
-        dout.writeUTF(request);
-        dout.flush();
+        dataOutputStream.writeUTF(request);
+        dataOutputStream.flush();
         requestLog(request);
 
-        String res = din.readUTF();
+        String res = dataInputStream.readUTF();
         responseLog(res);
       }
-    } catch (UnknownHostException | SocketException e) {
+    }
+//    catch (SocketTimeoutException e) {
+//      // Handle timeout exception
+//      System.out.println("Request timed out!");
+//    }
+    catch (UnknownHostException | SocketException e) {
       System.out.println("Host/Port unknown, please provide valid hostname and port number.");
+    }
+    catch (Exception e){
+      System.out.println("Exception occurred");
     }
 
   }
 
   private static void getKey() throws IOException {
     System.out.print("Enter key: ");
-    key = br.readLine();
+    key = bufferedReader.readLine();
   }
   private static void getValue() throws IOException {
     System.out.print("Enter Value: ");
-    value = br.readLine();
+    value = bufferedReader.readLine();
   }
 
   /**
@@ -90,7 +101,7 @@ class TCPClient {
    * helper method to return current timestamp
    */
   private static String getTimeStamp() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
     return "[Time: " + sdf.format(new Date()) + "]";
   }
 }

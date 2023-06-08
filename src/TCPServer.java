@@ -14,19 +14,18 @@ import java.util.Properties;
 import java.util.Scanner;
 
 public class TCPServer {
-  static OutputStream write;
   static InputStream read;
+  static OutputStream write;
   static Properties properties;
 
-  public static void main(String[] args) throws Exception {
-
+  public static void main(String[] args) {
 
     System.out.print("Enter a port Number: ");
     Scanner port = new Scanner(System.in);
     int PORT = port.nextInt();
-    if (args.length != 2 || PORT > 65535) {
-      throw new IllegalArgumentException("Invalid input! " +
-          "Please provide a valid IP and PORT number and start again.");
+    if ( PORT > 65535) {
+      throw new IllegalArgumentException("Invalid input!"
+          + "Please provide a valid IP address and Port number and start again.");
     }
 
     try(ServerSocket serverSocket= new ServerSocket(PORT)){
@@ -64,22 +63,22 @@ public class TCPServer {
    * @param s message string
    */
   private static void requestLog(String s, String ip, String port) {
-    System.out.println(getTimeStamp() + " REQUEST from: " + ip + ":" + port  + " -> "+ s);
+    System.out.println(getTimeStamp() + " Request from: " + ip + ":" + port  + " -> "+ s);
   }
 
   /**
    * helper method to print Response messages
    * @param s message string
    */
-  private static void responseLog(String s) { System.out.println(getTimeStamp() + " RESPONSE:  " + s + "\n");}
+  private static void responseLog(String s) { System.out.println(getTimeStamp() + " Response:  " + s + "\n");}
 
 
   /**
    * helper method to return current timestamp
    */
   private static String getTimeStamp() {
-    SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
-    return "<Time: " + sdf.format(new Date()) + ">";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
+    return "<Time: " + simpleDateFormat.format(new Date()) + ">";
   }
 
   /**
@@ -94,7 +93,7 @@ public class TCPServer {
       String key = "";
       int j = 0;
       for(int i = 1; i < input.length; i++) {
-        if(Objects.equals(input[i], "|")) {
+        if(Objects.equals(input[i], ",")) {
           j = i;
           break;
         }
@@ -124,34 +123,34 @@ public class TCPServer {
 
   }
 
-  private static String getFromMap(String key) throws IOException {
-      try {
-        String value = properties.getProperty(key);
-        String res = value == null ?
-            "No value found for key \"" + key + "\"" : "Key: \"" + key + "\" ,Value: \"" + value + "\"";
-        return res;
-      } catch (Exception e){
-        throw new IOException("Error: " + e);
-      }
-  }
-
-  private static String deleteFromMap(String key) throws IOException {
-    String res = "";
-    if(properties.containsKey(key)) {
-      properties.remove(key);
-      properties.store(write, null);
-      res = "Deleted key \"" + key + "\"";
-    }
-    else {
-      res = "Key not found.";
-    }
-    return res;
-  }
-
   static String addToMap(String key, String value) throws Exception {
     properties.setProperty(key, value);
     properties.store(write, null);
-    String res = "Inserted key \"" + key + "\" with value \"" + value + "\"";
-    return res;
+    String result = "Inserted key \"" + key + "\" with value \"" + value + "\"";
+    return result;
+  }
+
+  private static String deleteFromMap(String key) throws IOException {
+    String result = "";
+    if(properties.containsKey(key)) {
+      properties.remove(key);
+      properties.store(write, null);
+      result = "Deleted key \"" + key + "\"" + " successfully!";
+    }
+    else {
+      result = "Key not found.";
+    }
+    return result;
+  }
+
+  private static String getFromMap(String key) throws IOException {
+      try {
+        String value = properties.getProperty(key);
+        String result = value == null ?
+            "No value found for key \"" + key + "\"" : "Key: \"" + key + "\" ,Value: \"" + value + "\"";
+        return result;
+      } catch (Exception e){
+        throw new IOException("Error: " + e);
+      }
   }
 }
