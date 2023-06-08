@@ -58,11 +58,20 @@ public class UDPServer {
         datagramSocket.receive(receivePacket);
         InetAddress client = receivePacket.getAddress();
         int clientPort = receivePacket.getPort();
-        String request = new String(receivePacket.getData());
+        String request = new String(receivePacket.getData(), receivePacket.getOffset(), receivePacket.getLength());
         requestLog(request, client.toString(), String.valueOf(clientPort));
+
+        // Validate packet size
+        if (receivePacket.getLength() > 512) {
+          errorLog("Received packet exceeds maximum allowed size.");
+          continue;
+        }
 
         try {
           String[] input = request.split(" ");
+          if (input.length < 2) {
+            throw new IllegalArgumentException("Malformed request.");
+          }
           String result = performOperation(input);
           responseLog(result);
           responseBuffer = result.getBytes();

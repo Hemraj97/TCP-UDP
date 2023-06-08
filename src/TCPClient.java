@@ -47,7 +47,7 @@ class TCPClient {
         if (Objects.equals(operation, "1")) {
           getKey();
           getValue();
-          request = "PUT " + key + " , " + value;
+          request = "PUT " + key + " " + value;
         } else if (Objects.equals(operation, "2")) {
           getKey();
           request = "GET " + key;
@@ -59,12 +59,17 @@ class TCPClient {
           continue;
         }
 
-        dataOutputStream.writeUTF(request);
-        dataOutputStream.flush();
-        requestLog(request);
+        // Send request packet to the server
+        sendPacket(dataOutputStream, request);
 
-        String res = dataInputStream.readUTF();
-        responseLog(res);
+        // Receive response packet from the server
+        String response = receivePacket(dataInputStream);
+
+        if (response.startsWith("ERROR")) {
+          System.out.println("Received error response from the server: " + response);
+        } else {
+          responseLog(response);
+        }
       }
     } catch (UnknownHostException | SocketException e) {
       System.out.println("Host or Port unknown, please provide a valid hostname and port number.");
@@ -96,6 +101,30 @@ class TCPClient {
   }
 
   /**
+   * Helper method to send a packet to the server.
+   *
+   * @param outputStream the output stream to write the packet
+   * @param packet       the packet to send
+   * @throws IOException if an error occurs during writing
+   */
+  private static void sendPacket(DataOutputStream outputStream, String packet) throws IOException {
+    outputStream.writeUTF(packet);
+    outputStream.flush();
+    requestLog(packet);
+  }
+
+  /**
+   * Helper method to receive a packet from the server.
+   *
+   * @param inputStream the input stream to read the packet
+   * @return the received packet
+   * @throws IOException if an error occurs during reading
+   */
+  private static String receivePacket(DataInputStream inputStream) throws IOException {
+    return inputStream.readUTF();
+  }
+
+  /**
    * Helper method to print Request messages.
    *
    * @param str message string
@@ -119,7 +148,7 @@ class TCPClient {
    * @return the current timestamp
    */
   private static String getTimeStamp() {
-    SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
-    return "[Time: " + sdf.format(new Date()) + "]";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
+    return "[Time: " + simpleDateFormat.format(new Date()) + "]";
   }
 }

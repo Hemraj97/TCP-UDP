@@ -39,9 +39,6 @@ public class UDPClient {
       String start = getTimeStamp();
       System.out.println(start + " Client started");
 
-      byte[] requestBuffer;
-      byte[] resultBuffer;
-
       while (true) {
         System.out.println("---------------------------------------");
         System.out.print("Operations: \n1. PUT\n2. GET\n3. DELETE\nChoose operation number: ");
@@ -63,12 +60,17 @@ public class UDPClient {
 
         requestLog(request);
 
-        requestBuffer = request.getBytes();
+        byte[] requestBuffer = request.getBytes();
+        if (requestBuffer.length > 65507) {
+          System.out.println("Error: Request size exceeds the maximum allowed limit.");
+          continue;
+        }
+
         DatagramPacket requestPacket = new DatagramPacket(requestBuffer, requestBuffer.length,
             serverIP, serverPort);
         datagramSocket.send(requestPacket);
 
-        resultBuffer = new byte[512];
+        byte[] resultBuffer = new byte[512];
         DatagramPacket resultPacket = new DatagramPacket(resultBuffer, resultBuffer.length);
 
         try {
@@ -76,13 +78,13 @@ public class UDPClient {
           String result = new String(resultBuffer);
           responseLog(result);
         } catch (java.net.SocketTimeoutException e) {
-          System.out.println("Timeout occurred. "
-              + "The server did not respond within the specified time.");
+          System.out.println("Timeout occurred. " +
+              "The server did not respond within the specified time.");
         }
       }
     } catch (UnknownHostException | SocketException e) {
       System.out.println(
-          "Error of Host or Port unknown, please provide a valid hostname and port number.");
+          "Host or Port unknown error, try again!");
     }
   }
 
@@ -91,7 +93,6 @@ public class UDPClient {
    *
    * @throws IOException if an error occurs during input reading
    */
-
   private static void getKey() throws IOException {
     System.out.print("Enter key: ");
     key = scanner.nextLine();
@@ -136,5 +137,4 @@ public class UDPClient {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
     return "[Time: " + simpleDateFormat.format(new Date()) + "]";
   }
-
 }

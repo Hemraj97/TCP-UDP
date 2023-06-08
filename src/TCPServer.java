@@ -101,26 +101,19 @@ public class TCPServer {
    */
   private static String performOperation(String[] input) throws IllegalArgumentException {
     try {
-      String operation = input[0].toUpperCase();
-      String key = "";
-      int j = 0;
-      for (int i = 1; i < input.length; i++) {
-        if (Objects.equals(input[i], ",")) {
-          j = i;
-          break;
-        } else {
-          key = key + input[i] + " ";
-        }
+      if (input.length < 2) {
+        throw new IllegalArgumentException("Invalid input: Insufficient arguments.");
       }
-      key = key.trim();
+
+      String operation = input[0].toUpperCase();
+      String key = input[1];
 
       switch (operation) {
         case "PUT": {
-          String value = "";
-          for (int i = j + 1; i < input.length; i++) {
-            value = value + " " + input[i].trim();
+          if (input.length < 3) {
+            throw new IllegalArgumentException("Invalid input: Value is missing for PUT operation.");
           }
-          value = value.trim();
+          String value = input[2];
           return addToMap(key, value);
         }
         case "DELETE": {
@@ -130,13 +123,16 @@ public class TCPServer {
           return getFromMap(key);
         }
         default:
-          throw new IllegalArgumentException();
+          throw new IllegalArgumentException("Invalid operation: " + operation);
       }
+    } catch (IllegalArgumentException e) {
+      return "Bad Request: " + e.getMessage();
     } catch (Exception e) {
-      return "Bad Request!: Please view README.md to check available operations.";
+      return "Error: " + e.getMessage();
     }
-
   }
+
+
 
   /**
    * Adds a key-value pair to the map and stores it in the properties file.
