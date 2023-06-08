@@ -11,10 +11,11 @@ import java.util.Scanner;
 
 /**
  * UDPClient is a simple implementation of a UDP client in Java.
- *
+ * <p>
  * It sends requests to a UDP server, receives responses, and handles exceptions.
  */
-public class UDPClient  {
+public class UDPClient {
+
   static String key, value, request;
   static Scanner scanner;
 
@@ -25,7 +26,7 @@ public class UDPClient  {
    * @throws IOException if an I/O error occurs.
    */
   public static void main(String[] args) throws IOException {
-    if(args.length != 2 || Integer.parseInt(args[1]) > 65535) {
+    if (args.length != 2 || Integer.parseInt(args[1]) > 65535) {
       throw new IllegalArgumentException("Invalid argument! " +
           "Please provide valid IP and Port number and start again");
     }
@@ -34,12 +35,12 @@ public class UDPClient  {
     scanner = new Scanner(System.in);
 
     try (DatagramSocket datagramSocket = new DatagramSocket()) {
+      datagramSocket.setSoTimeout(10000);
       String start = getTimeStamp();
       System.out.println(start + " Client started");
 
       byte[] requestBuffer;
       byte[] resultBuffer;
-
 
       while (true) {
         System.out.println("---------------------------------------");
@@ -69,12 +70,19 @@ public class UDPClient  {
 
         resultBuffer = new byte[512];
         DatagramPacket resultPacket = new DatagramPacket(resultBuffer, resultBuffer.length);
-        datagramSocket.receive(resultPacket);
-        String result = new String(resultBuffer);
-        responseLog(result);
+
+        try {
+          datagramSocket.receive(resultPacket);
+          String result = new String(resultBuffer);
+          responseLog(result);
+        } catch (java.net.SocketTimeoutException e) {
+          System.out.println("Timeout occurred. "
+              + "The server did not respond within the specified time.");
+        }
       }
     } catch (UnknownHostException | SocketException e) {
-      System.out.println("Error of Host or Port unknown, please provide a valid hostname and port number.");
+      System.out.println(
+          "Error of Host or Port unknown, please provide a valid hostname and port number.");
     }
   }
 
@@ -84,7 +92,7 @@ public class UDPClient  {
    * @throws IOException if an error occurs during input reading
    */
 
-  private static void getKey()  throws IOException{
+  private static void getKey() throws IOException {
     System.out.print("Enter key: ");
     key = scanner.nextLine();
   }
@@ -104,16 +112,20 @@ public class UDPClient  {
    *
    * @param str message string
    */
-  private static void requestLog(String str) { System.out.println(getTimeStamp() +
-      " Request -> " + str);}
+  private static void requestLog(String str) {
+    System.out.println(getTimeStamp() +
+        " Request -> " + str);
+  }
 
   /**
    * Helper method to print Response messages.
    *
    * @param str message string
    */
-  private static void responseLog(String str) { System.out.println(getTimeStamp() +
-      " Response -> " + str + "\n");}
+  private static void responseLog(String str) {
+    System.out.println(getTimeStamp() +
+        " Response -> " + str + "\n");
+  }
 
   /**
    * Helper method to return the current timestamp.
