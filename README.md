@@ -64,7 +64,7 @@ The UDP Server and Client are two Java programs that enable communication betwee
 
 ## UDPServer
 
-The TCPServer program represents the server-side of the UDP communication. It creates a datagram socket and listens for incoming client connections on a specified port. Once a client connects, the server can send and receive messages from the client.
+The UDPServer program represents the server-side of the UDP communication. It creates a datagram socket and listens for incoming client connections on a specified port. Once a client connects, the server can send and receive messages from the client.
 
 ### Usage
 
