@@ -5,14 +5,21 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * TCP Client Class
+ * TCPClient is a simple implementation of a TCP client in Java language.
+ * It sends requests to a TCP server, receives responses, and handles exceptions.
  */
+
 class TCPClient {
 
-//  private static final int TIMEOUT = 5000;
   static String key, value, request;
   static BufferedReader bufferedReader;
 
+  /**
+   * The main function/start point of the TCPClient program.
+   *
+   * @param args command-line arguments where it expects two arguments: Host name and port number
+   * @throws Exception an error occurring during execution.
+   */
   public static void main(String[] args) throws Exception {
 
     // get Server's IP and PORT from command line, or else throw error
@@ -35,15 +42,15 @@ class TCPClient {
       while (true) {
         System.out.println("---------------------------------------");
         System.out.print("Operations: \n1. PUT\n2. GET\n3. DELETE\nChoose operation number: ");
-        String op = bufferedReader.readLine().trim();
-        if (Objects.equals(op, "1")) {
+        String operation = bufferedReader.readLine().trim();
+        if (Objects.equals(operation, "1")) {
           getKey();
           getValue();
           request = "PUT " + key + " , " + value ;
-        } else if (Objects.equals(op, "2")) {
+        } else if (Objects.equals(operation, "2")) {
           getKey();
           request = "GET " + key;
-        } else if (Objects.equals(op, "3")) {
+        } else if (Objects.equals(operation, "3")) {
           getKey();
           request = "DELETE " + key;
         } else {
@@ -59,46 +66,56 @@ class TCPClient {
         responseLog(res);
       }
     }
-//    catch (SocketTimeoutException e) {
-//      // Handle timeout exception
-//      System.out.println("Request timed out!");
-//    }
     catch (UnknownHostException | SocketException e) {
-      System.out.println("Host/Port unknown, please provide valid hostname and port number.");
+      System.out.println("Host or Port unknown, please provide a valid hostname and port number.");
     }
     catch (Exception e){
-      System.out.println("Exception occurred");
+      System.out.println("Exception occurred!" + e);
     }
-
   }
 
+  /**
+   * Gets the key from the user via the console input.
+   *
+   * @throws IOException if an error occurs during input reading
+   */
   private static void getKey() throws IOException {
     System.out.print("Enter key: ");
     key = bufferedReader.readLine();
   }
+
+  /**
+   * Gets the value from the user via the console input.
+   *
+   * @throws IOException if an error occurs during input reading
+   */
   private static void getValue() throws IOException {
     System.out.print("Enter Value: ");
     value = bufferedReader.readLine();
   }
 
   /**
-   * helper method to print Request messages
-   * @param s message string
+   * Helper method to print Request messages.
+   *
+   * @param str message string
    */
-  private static void requestLog(String s) {
-    System.out.println(getTimeStamp() + " Request: " + s);
+  private static void requestLog(String str) {
+    System.out.println(getTimeStamp() + " Request: " + str);
   }
 
   /**
-   * helper method to print Response messages
-   * @param s message string
+   * Helper method to print Response messages.
+   *
+   * @param str message string
    */
-  private static void responseLog(String s) {
-    System.out.println(getTimeStamp() + " Response: " + s + "\n");
+  private static void responseLog(String str) {
+    System.out.println(getTimeStamp() + " Response: " + str + "\n");
   }
 
   /**
-   * helper method to return current timestamp
+   * Helper method to return the current timestamp.
+   *
+   * @return the current timestamp
    */
   private static String getTimeStamp() {
     SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");

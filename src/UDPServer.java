@@ -14,21 +14,23 @@ import java.util.Properties;
 import java.util.Scanner;
 
 /**
- * Server Class for UDP communication
+ * UDPServer is a simple implementation of a UDP server in Java.
+ *
+ * It listens for incoming UDP packets, processes client requests, and sends back responses.
  */
 public class UDPServer {
-  static OutputStream write;
   static InputStream read;
+  static OutputStream write;
   static Properties properties;
 
   /**
-   * Drive function for the server
+   * The main start point of the UDPServer program.
+   *
    * @param args command line arguments
    * @throws SocketException exception
    */
-  public static void main(String[] args) throws SocketException {
+  public static void main(String[] args) throws Exception {
 
-    // accept server PORT from command line, else throw error
     System.out.print("Enter a port Number: ");
     Scanner port = new Scanner(System.in);
     int PORT = port.nextInt();
@@ -50,7 +52,7 @@ public class UDPServer {
       write = new FileOutputStream("map.properties");
       properties.store(write, null);
 
-      // keep communication channel open until user keyboard interruption
+
       while (true) {
         DatagramPacket receivePacket = new DatagramPacket(requestBuffer, requestBuffer.length);
         datagramSocket.receive(receivePacket);
@@ -71,38 +73,48 @@ public class UDPServer {
           responseBuffer = errorMessage.getBytes();
         }
 
-        DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length, client, clientPort);
+        DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length,
+            client, clientPort);
         datagramSocket.send(responsePacket);
         requestBuffer = new byte[512];
 
       }
     } catch (Exception e) {
-      errorLog("Something went wrong, please make sure IP and PORT are valid and try again.");
+      errorLog("Error! , please make sure IP and Port are valid and try again.");
     }
   }
 
   /**
-   * helper method to print Request messages
-   * @param s message string
+   * Helper method to print Request messages.
+   *
+   * @param str    message string
+   * @param ip   client IP address
+   * @param port client port number
    */
-  private static void requestLog(String s, String ip, String port) {
-    System.out.println(getTimeStamp() + " Request from: " + ip + ":" + port  + " -> "+ s);
+  private static void requestLog(String str, String ip, String port) {
+    System.out.println(getTimeStamp() + " Request from: " + ip + ":" + port  + " -> "+ str);
   }
 
   /**
-   * helper method to print Response messages
-   * @param s message string
+   * Helper method to print Response messages.
+   *
+   * @param str message string
    */
-  private static void responseLog(String s) { System.out.println(getTimeStamp() + " Response -> " + s + "\n");}
+  private static void responseLog(String str) { System.out.println(getTimeStamp() +
+      " Response -> " + str + "\n");}
 
   /**
-   * helper method to print Error messages
+   * Helper method to print Error messages.
+   *
    * @param err error message string
    */
-  private static void errorLog(String err) { System.out.println(getTimeStamp() + " Error -> " + err);}
+  private static void errorLog(String err) { System.out.println(getTimeStamp() +
+      " Error -> " + err);}
 
   /**
-   * helper method to return current timestamp
+   * Helper method to return the current timestamp.
+   *
+   * @return the current timestamp
    */
   private static String getTimeStamp() {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
@@ -121,7 +133,7 @@ public class UDPServer {
       String key = "";
       int j = 0;
       for(int i = 1; i < input.length; i++) {
-        if(Objects.equals(input[i], "|")) {
+        if(Objects.equals(input[i], ",")) {
           j = i;
           break;
         }
@@ -151,6 +163,14 @@ public class UDPServer {
 
   }
 
+  /**
+   * Add the key-value pair to the map.
+   *
+   * @param key   the key
+   * @param value the value
+   * @return a message indicating the success of the operation
+   * @throws Exception if there is an error adding to the map
+   */
   static String addToMap(String key, String value) throws Exception {
     properties.setProperty(key, value);
     properties.store(write, null);
@@ -158,6 +178,13 @@ public class UDPServer {
     return result;
   }
 
+  /**
+   * Delete the key from the map.
+   *
+   * @param key the key to delete
+   * @return a message indicating the success of the operation
+   * @throws IOException if there is an error deleting from the map
+   */
   private static String deleteFromMap(String key) throws IOException {
     String result = "";
     if(properties.containsKey(key)) {
@@ -171,14 +198,18 @@ public class UDPServer {
     return result;
   }
 
+  /**
+   * Get the value associated with the key from the map.
+   *
+   * @param key the key to retrieve the value for
+   * @return the value associated with the key or a message indicating that the key was not found
+   * @throws IOException if there is an error retrieving from the map
+   */
   private static String getFromMap(String key) throws IOException {
     String value = properties.getProperty(key);
     String result = value == null ?
         "No value found for key \"" + key + "\"" : "Key: \"" + key + "\" ,Value: \"" + value + "\"";
     return result;
   }
-
-
-
 
 }
