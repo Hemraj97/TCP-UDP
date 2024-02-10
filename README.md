@@ -1,4 +1,5 @@
 
+
 # TCP Server and Client
 
 The TCP Server and Client are two Java programs that enable communication between a server and a client using the TCP/IP protocol. The TCP Server listens for client connections on a specified port, while the TCP Client connects to the server's IP address and port. The server and client exchange data through TCP sockets, allowing for reliable and ordered transmission of messages.
@@ -115,4 +116,6 @@ To use the UDPClient, follow these steps:
 
 5. To terminate the client program, simply close the client window or use the appropriate termination command.
 
+
+=======
 
