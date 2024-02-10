@@ -110,9 +110,12 @@ public class TCPServer {
 
       switch (operation) {
         case "PUT": {
+
           if (input.length < 3) {
-            throw new IllegalArgumentException("Invalid input: Value is missing for PUT operation.");
+            throw new IllegalArgumentException(
+                "Invalid input: Value is missing for PUT operation.");
           }
+
           String value = input[2];
           return addToMap(key, value);
         }
@@ -131,7 +134,6 @@ public class TCPServer {
       return "Error: " + e.getMessage();
     }
   }
-
 
 
   /**

@@ -38,7 +38,7 @@ class TCPClient {
       DataOutputStream dataOutputStream = new DataOutputStream(s.getOutputStream());
       bufferedReader = new BufferedReader(new InputStreamReader(System.in));
       String start = getTimeStamp();
-      System.out.println(start + " Client started on port " + s.getPort());
+      System.out.println(start + " Client started on port: " + s.getPort());
 
       while (true) {
         System.out.println("---------------------------------------");

@@ -36,13 +36,13 @@ public class UDPServer {
     int PORT = port.nextInt();
     if ( PORT > 65535) {
       throw new IllegalArgumentException("Invalid input!"
-          + "Please provide a valid IP address and Port number and start again.");
+          + "Please provide a valid IP address and Port number.");
     }
 
     try (DatagramSocket datagramSocket = new DatagramSocket(PORT)){
 
       String start = getTimeStamp();
-      System.out.println(start + " Server started on port " + PORT);
+      System.out.println(start + " Server started on port: " + PORT);
       byte[] requestBuffer = new byte[512];
       byte[] responseBuffer;
 
@@ -70,7 +70,7 @@ public class UDPServer {
         try {
           String[] input = request.split(" ");
           if (input.length < 2) {
-            throw new IllegalArgumentException("Malformed request.");
+            throw new IllegalArgumentException("Malformed request!");
           }
           String result = performOperation(input);
           responseLog(result);
@@ -89,7 +89,7 @@ public class UDPServer {
 
       }
     } catch (Exception e) {
-      errorLog("Error! , please make sure IP and Port are valid and try again.");
+      errorLog("Error! Please make sure IP and Port are valid and try again.");
     }
   }
 
@@ -167,7 +167,7 @@ public class UDPServer {
           throw new IllegalArgumentException();
       }
     } catch (Exception e) {
-      return "BAD REQUEST!:  Please view README to check available operations.";
+      return "BAD REQUEST!:  Please view README.md to check available operations." + e;
     }
 
   }

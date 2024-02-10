@@ -54,7 +54,7 @@ public class UDPClient {
           getKey();
           request = "DELETE " + key;
         } else {
-          System.out.println("Please choose a valid operation.");
+          System.out.println("Please choose a valid operation!");
           continue;
         }
 
