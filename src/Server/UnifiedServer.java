@@ -73,7 +73,7 @@ public class UnifiedServer {
     try (DatagramSocket datagramSocket = new DatagramSocket(PORT)){
 
       String start = getTimeStamp();
-      System.out.println(start + " Server started on UDP port: " + PORT);
+      System.out.println(start + " UDP Server started on port: " + PORT);
       byte[] requestBuffer = new byte[512];
       byte[] responseBuffer;
       read = new FileInputStream("Server/map.properties");

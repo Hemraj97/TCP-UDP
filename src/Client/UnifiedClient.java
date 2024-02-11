@@ -1,9 +1,16 @@
 package Client;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,10 +22,11 @@ import java.util.Scanner;
  * <p>
  * It sends requests to a UDP server, receives responses, and handles exceptions.
  */
-public class UDPClient {
+public class UnifiedClient {
 
   static String key, value, request;
   static Scanner scanner;
+  static BufferedReader bufferedReader;
 
   /**
    * The main start point of the UDPClient program.
@@ -27,13 +35,27 @@ public class UDPClient {
    * @throws IOException if an I/O error occurs.
    */
   public static void main(String[] args) throws IOException {
-    if (args.length != 2 || Integer.parseInt(args[1]) > 65535) {
+    if (args.length != 3 || Integer.parseInt(args[1]) > 65535) {
       throw new IllegalArgumentException("Invalid argument! " +
           "Please provide valid IP and Port number and start again");
     }
     InetAddress serverIP = InetAddress.getByName(args[0]);
     int serverPort = Integer.parseInt(args[1]);
-    scanner = new Scanner(System.in);
+    String protocol = args[2];
+    if(protocol.toLowerCase().equals("udp"))
+      UDPClient(serverIP,serverPort);
+    else if(protocol.toLowerCase().equals("tcp"))
+      TCPClient(serverIP, serverPort);
+    else {
+      throw new IllegalArgumentException("Invalid argument! " +
+          "Please provide valid protocol tcp or udp and start again");
+    }
+    
+
+  }
+
+    static private void UDPClient(InetAddress serverIP, int serverPort) throws IOException{
+      scanner = new Scanner(System.in);
 
     try (DatagramSocket datagramSocket = new DatagramSocket()) {
       datagramSocket.setSoTimeout(10000);
@@ -81,13 +103,70 @@ public class UDPClient {
         } catch (java.net.SocketTimeoutException e) {
           System.out.println("Timeout occurred. " +
               "The server did not respond within the specified time.");
+        } catch (IOException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
         }
       }
     } catch (UnknownHostException | SocketException e) {
       System.out.println(
           "Host or Port unknown error, try again!");
     }
-  }
+
+    }
+
+    static private void TCPClient(InetAddress serverIP, int serverPort){
+      scanner = new Scanner(System.in);
+      try (Socket s = new Socket()) {
+        int timeout = 10000;
+        s.connect(new InetSocketAddress(serverIP, serverPort), timeout);
+  
+        DataInputStream dataInputStream = new DataInputStream(s.getInputStream());
+        DataOutputStream dataOutputStream = new DataOutputStream(s.getOutputStream());
+        bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        String start = getTimeStamp();
+        System.out.println(start + " Client started on port: " + s.getPort());
+  
+        while (true) {
+          System.out.println("---------------------------------------");
+          System.out.print("Operations: \n1. PUT\n2. GET\n3. DELETE\nChoose operation number: ");
+          String operation = bufferedReader.readLine().trim();
+          if (Objects.equals(operation, "1")) {
+            getKey();
+            getValue();
+            request = "PUT " + key + " , " + value;
+          } else if (Objects.equals(operation, "2")) {
+            getKey();
+            request = "GET " + key;
+          } else if (Objects.equals(operation, "3")) {
+            getKey();
+            request = "DELETE " + key;
+          } else {
+            System.out.println("Please choose a valid operation.");
+            continue;
+          }
+  
+          // Send request packet to the server
+          sendPacket(dataOutputStream, request);
+  
+          // Receive response packet from the server
+          String response = receivePacket(dataInputStream);
+  
+          if (response.startsWith("ERROR")) {
+            System.out.println("Received error response from the server: " + response);
+          } else {
+            responseLog(response);
+          }
+        }
+      } catch (UnknownHostException | SocketException e) {
+        System.out.println("Host or Port unknown, please provide a valid hostname and port number.");
+      } catch (SocketTimeoutException e) {
+        System.out.println("Connection timed out. Please check the server availability and try again.");
+      } catch (Exception e) {
+        System.out.println("Exception occurred!" + e);
+      }
+    }
+
 
   /**
    * Gets the key from the user via the console input.
@@ -137,5 +216,29 @@ public class UDPClient {
   private static String getTimeStamp() {
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss.SSS");
     return "[Time: " + simpleDateFormat.format(new Date()) + "]";
+  }
+
+  /**
+   * Helper method to send a packet to the server.
+   *
+   * @param outputStream the output stream to write the packet
+   * @param packet       the packet to send
+   * @throws IOException if an error occurs during writing
+   */
+  private static void sendPacket(DataOutputStream outputStream, String packet) throws IOException {
+    outputStream.writeUTF(packet);
+    outputStream.flush();
+    requestLog(packet);
+  }
+
+  /**
+   * Helper method to receive a packet from the server.
+   *
+   * @param inputStream the input stream to read the packet
+   * @return the received packet
+   * @throws IOException if an error occurs during reading
+   */
+  private static String receivePacket(DataInputStream inputStream) throws IOException {
+    return inputStream.readUTF();
   }
 }
