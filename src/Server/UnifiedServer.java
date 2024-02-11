@@ -1,4 +1,6 @@
 package Server;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -7,19 +9,21 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Scanner;
 
 /**
  * UDPServer is a simple implementation of a UDP server in Java.
  *
  * It listens for incoming UDP packets, processes client requests, and sends back responses.
  */
-public class UDPServer {
+public class UnifiedServer {
   static InputStream read;
   static OutputStream write;
   static Properties properties;
@@ -32,25 +36,50 @@ public class UDPServer {
    */
   public static void main(String[] args) throws Exception {
 
-    System.out.print("Enter a port Number: ");
-    Scanner port = new Scanner(System.in);
-    int PORT = port.nextInt();
-    if ( PORT > 65535) {
+    // System.out.print("Enter a port Number: ");
+    int tcpPort = Integer.parseInt(args[0]);
+    int udpPort = Integer.parseInt(args[1]);
+    if ( udpPort > 65535 || tcpPort > 65535) {
       throw new IllegalArgumentException("Invalid input!"
           + "Please provide a valid IP address and Port number.");
     }
+    
 
+
+    try {
+      // Start TCP server thread
+      Thread tcpThread = new Thread(() -> {
+          TCPServer(tcpPort);
+      });
+      tcpThread.start();
+
+      // Start UDP server thread
+      Thread udpThread = new Thread(() -> {
+          UDPServer(udpPort);
+      });
+      udpThread.start();
+
+  } catch (NumberFormatException e) {
+      e.printStackTrace();
+  }
+    // UDPServer(udpPort);
+    // TCPServer(tcpPort);
+
+
+
+  }
+
+  static private void UDPServer(int PORT){
     try (DatagramSocket datagramSocket = new DatagramSocket(PORT)){
 
       String start = getTimeStamp();
-      System.out.println(start + " Server started on port: " + PORT);
+      System.out.println(start + " Server started on UDP port: " + PORT);
       byte[] requestBuffer = new byte[512];
       byte[] responseBuffer;
-
-      read = new FileInputStream("map.properties");
+      read = new FileInputStream("Server/map.properties");
       properties = new Properties();
       properties.load(read);
-      write = new FileOutputStream("map.properties");
+      write = new FileOutputStream("Server/map.properties");
       properties.store(write, null);
 
 
@@ -91,6 +120,38 @@ public class UDPServer {
       }
     } catch (Exception e) {
       errorLog("Error! Please make sure IP and Port are valid and try again.");
+    }
+  }
+
+
+  static private void TCPServer(int TCPPORT){
+    try (ServerSocket serverSocket = new ServerSocket(TCPPORT)) {
+      String start = getTimeStamp();
+      System.out.println(start + " TCP Server started on port: " + TCPPORT);
+      Socket clientSocket = serverSocket.accept();
+      DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
+      DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
+      read = new FileInputStream("Server/map.properties");
+      properties = new Properties();
+      properties.load(read);
+      write = new FileOutputStream("Server/map.properties");
+      properties.store(write, null);
+      
+
+      while (true) {
+        String input = dataInputStream.readUTF();
+        requestLog(input, String.valueOf(clientSocket.getInetAddress()),
+            String.valueOf(clientSocket.getPort()));
+
+        String result = performOperation(input.split(" "));
+        responseLog(result);
+        dataOutputStream.writeUTF(result);
+        dataOutputStream.flush();
+      }
+
+
+    } catch (Exception e) {
+      System.out.println(getTimeStamp() + " Error: " + e);
     }
   }
 
@@ -139,6 +200,8 @@ public class UDPServer {
    */
   private static String performOperation(String[] input) throws IllegalArgumentException {
     try {
+      System.out.println(Arrays.toString(input));
+      System.out.println(input[0]);
       String operation = input[0].toUpperCase();
       String key = "";
       int j = 0;

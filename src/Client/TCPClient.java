@@ -48,7 +48,7 @@ class TCPClient {
         if (Objects.equals(operation, "1")) {
           getKey();
           getValue();
-          request = "PUT " + key + " " + value;
+          request = "PUT " + key + " , " + value;
         } else if (Objects.equals(operation, "2")) {
           getKey();
           request = "GET " + key;
