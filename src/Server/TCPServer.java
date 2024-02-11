@@ -1,3 +1,4 @@
+package Server;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
@@ -9,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -46,11 +46,11 @@ public class TCPServer {
       DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
       DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
 
-      read = new FileInputStream("map.properties");
+      read = new FileInputStream("/map.properties");
       properties = new Properties();
       properties.load(read);
 
-      write = new FileOutputStream("map.properties");
+      write = new FileOutputStream("/map.properties");
       properties.store(write, null);
 
       while (true) {
